@@ -1,0 +1,13 @@
+setup.py
+robbot/__init__.py
+robbot/robbot.py
+robbot/static/README.txt
+robbot/static/css/robbot.css
+robbot/static/html/robbot.html
+robbot/static/js/src/robbot.js
+robbot_xblock.egg-info/PKG-INFO
+robbot_xblock.egg-info/SOURCES.txt
+robbot_xblock.egg-info/dependency_links.txt
+robbot_xblock.egg-info/entry_points.txt
+robbot_xblock.egg-info/requires.txt
+robbot_xblock.egg-info/top_level.txt
