@@ -210,3 +210,15 @@
 #robbot .wheel_container .wheel.right{
     bottom: -5px;
 }
+
+/* RUN TAB : FINISH SIGN */
+#runtime .finish-sign {
+    position: absolute;
+    left: 500px;
+    top: 500px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #0f0;
+    border: 2px solid #00aa00;
+}

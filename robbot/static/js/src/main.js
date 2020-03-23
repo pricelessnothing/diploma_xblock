@@ -2,7 +2,8 @@
 
 /* XBLOCK STUFF*/
 
-function RobbotXBlock(runtime, element) { //eslint-disable-line no-unused-vars
+//eslint-disable-next-line no-unused-vars
+function RobbotXBlock(runtime, element) { 
     var handlerUrl = runtime.handlerUrl(element, 'test')
 
     $.ajax({
@@ -29,6 +30,14 @@ const robbot = {
     length: 70
 }
 
+
+const map = {
+    finish: {
+        x: 500,
+        y: 500
+    }
+}
+
 let intervalID = null
 
 /* UI ELEMENTS DECLARATION */
@@ -40,6 +49,7 @@ const UIBtnNextStep = document.querySelector('#tab-content .run .controls .next_
 const UITabs = document.querySelectorAll('#tab-header .tab-header-item')
 const UIContents = document.querySelectorAll('#tab-content .tab-content-item')
 const UIRun_ToolbarToggler = document.querySelector('#tab-content .run .toolbar .toolbar-toggler')
+// const UIFinishSign = document.querySelectorAll('#tab-content .run .runtime .finish-sign')
 
 /* EVENT LISTENERS */
 
@@ -90,6 +100,10 @@ const executionPause = () => {
 function executionCycle() {
     move()
     render()
+    if (Math.abs(robbot.x - map.finish.x) < 10 && Math.abs(robbot.y - map.finish.y) < 10) {
+        executionPause()
+        alert('You win!')
+    } 
 }
 
 function move() {
