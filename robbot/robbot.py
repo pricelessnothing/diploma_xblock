@@ -1,4 +1,7 @@
-"""TO-DO: Write a description of what this XBlock is."""
+"""
+This XBlock is kinda simulation of robot 
+doing self-moving stuff according to algorithm 
+"""
 
 import pkg_resources
 from web_fragments.fragment import Fragment
@@ -7,18 +10,6 @@ from xblock.fields import Integer, Scope
 
 
 class RobbotXBlock(XBlock):
-    """
-    TO-DO: document what your XBlock does.
-    """
-
-    # Fields are defined on the class.  You can access them in your code as
-    # self.<fieldname>.
-
-    # TO-DO: delete count, and define your own fields.
-    count = Integer(
-        default=0, scope=Scope.user_state,
-        help="A simple counter, to show something happening",
-    )
 
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
@@ -34,22 +25,15 @@ class RobbotXBlock(XBlock):
         html = self.resource_string("static/html/robbot.html")
         frag = Fragment(html.format(self=self))
         frag.add_css(self.resource_string("static/css/robbot.css"))
-        frag.add_javascript(self.resource_string("static/js/src/robbot.js"))
+        frag.add_javascript(self.resource_string("static/js/src/main.js"))
         frag.initialize_js('RobbotXBlock')
         return frag
 
     # TO-DO: change this handler to perform your own actions.  You may need more
     # than one handler, or you may not need any handlers at all.
     @XBlock.json_handler
-    def increment_count(self, data, suffix=''):
-        """
-        An example handler, which increments the data.
-        """
-        # Just to show data coming in...
-        assert data['hello'] == 'world'
-
-        self.count += 1
-        return {"count": self.count}
+    def test(self, data, suffix=''):
+        return 'zbs'
 
     # TO-DO: change this to create the scenarios you'd like to see in the
     # workbench while developing your XBlock.

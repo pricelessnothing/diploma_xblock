@@ -1,0 +1,23 @@
+{
+  "name": "robbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "setup.py",
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^6.8.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pricelessnothing/diploma_xblock.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pricelessnothing/diploma_xblock/issues"
+  },
+  "homepage": "https://github.com/pricelessnothing/diploma_xblock#readme"
+}

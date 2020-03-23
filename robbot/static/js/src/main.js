@@ -1,3 +1,18 @@
+/* globals $ */
+
+/* XBLOCK STUFF*/
+
+function RobbotXBlock(runtime, element) { //eslint-disable-line no-unused-vars
+    var handlerUrl = runtime.handlerUrl(element, 'test')
+
+    $.ajax({
+        type: 'POST',
+        url: handlerUrl,
+        data: JSON.stringify({'hello': 'world'}),
+        success: data => alert(data)
+    })
+}
+
 /* STATES */
 
 const cfg = {
