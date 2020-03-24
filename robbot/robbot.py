@@ -1,6 +1,6 @@
 """
-This XBlock is kinda simulation of robot 
-doing self-moving stuff according to algorithm 
+This XBlock is kinda simulation of robot
+doing self-moving stuff according to algorithm
 """
 
 import pkg_resources
@@ -25,7 +25,7 @@ class RobbotXBlock(XBlock):
         html = self.resource_string("static/html/robbot.html")
         frag = Fragment(html.format(self=self))
         frag.add_css(self.resource_string("static/css/robbot.css"))
-        frag.add_javascript(self.resource_string("static/js/src/main.js"))
+        frag.add_javascript(self.resource_string("static/js/src/robbot.js"))
         frag.initialize_js('RobbotXBlock')
         return frag
 
