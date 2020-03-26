@@ -3,20 +3,21 @@ class Translator {
         this.blocks = blocks
         this.globals = globals
         this.errors = new Errors('en').get()
-        this.translated = ''
+        this.operators = ['+', '-', '*', '/', '**']
     }
 
     translate() {
         const blocks = this.blocks
+        let translated = ''
         let prevBlock = blocks.filter(b => b.type === 'start')[0]
         while(true) {
             const block = blocks.filter(b => prevBlock.outputs.includes(b.id))[0]
             if (block.type === 'instructions') {
-                let translated = this.translateInstruction(block)
-                if (translated.code) {
-                    return translated
+                let res = this.translateInstruction(block)
+                if (res.code) {
+                    return
                 } else {
-                    this.translated += translated
+                    translated += res
                 }
             }
             if (block.outputs.length) {
@@ -25,6 +26,7 @@ class Translator {
                 break
             }
         }
+        return translated
     }
 
     translateInstruction({text, id}) {
@@ -33,7 +35,26 @@ class Translator {
         let error = null
         lines.forEach((line, lineidx) => {
             if (line.indexOf('=') > -1) {
-                translated += line
+                let [left, right] = line.split('=')
+                left = left.trim()
+                if (left.length) {
+                    if (/\w+/.test(left)){
+                        if (! (/\d/.test(left[0])) ) {
+                            if (this.globals[left]) {
+                                left = this.globals[left]
+                            } else {
+                                left = `let ${left}`
+                            }
+                            translated = `${left} = ${right} \n`
+                        } else {
+                            error = this.raiseError('inst-no-var-start-number', id, lineidx)
+                        }
+                    } else {
+                        error = this.raiseError('inst-no-disallowed-symbols', id, lineidx)
+                    }
+                } else {
+                    error = this.raiseError('inst-no-left-hand-operand', id, lineidx)
+                }
             } else {
                 error = this.raiseError('inst-no-assignment', id, lineidx)
             }
@@ -43,14 +64,8 @@ class Translator {
 
     raiseError = (error, blockid, lineidx) => ({
         code: error,
-        message: this.errors[error],
+        message: this.errors[error] || 'Something not good happened',
         block: blockid,
         line: lineidx
     })
-
-    //TODO: move to runner
-    run() {
-        eval(this.translated)
-        this.translated = ''
-    }
 }

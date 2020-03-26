@@ -42,7 +42,7 @@ function RobbotXBlock(runtime, element) {
                 {
                     id: 2,
                     type: 'instructions',
-                    text: 'let x = \'hi there\'',
+                    text: 'SPEED = 3',
                     inputs: [1],
                     outputs: [3],
                     x: 200,
@@ -51,7 +51,7 @@ function RobbotXBlock(runtime, element) {
                 {
                     id: 3,
                     type: 'instructions',
-                    text: 'alert(x)',
+                    text: 'ROT = 0',
                     inputs: [2],
                     outputs: [],
                     x: 300,
@@ -65,8 +65,8 @@ function RobbotXBlock(runtime, element) {
         let draggableBlock = null
 
         const translator = new Translator(workbench.blocks, {
-            SPEED: robbot.speed,
-            ROT: robbot.rot
+            SPEED: 'robbot.speed',
+            ROT: 'robbot.rot'
         })
 
         /* UI ELEMENTS DECLARATION */
@@ -165,12 +165,13 @@ function RobbotXBlock(runtime, element) {
             blockToUpdate.y = draggableBlock[0].offsetTop
             draggableBlock = null
             renderArrows()
-            debugger
             const result = translator.translate()
             if (result.code) {
                 UIRaiseError(result)
             } else {
-                translator.run()
+                //TODO: separate runner
+                console.log(result)
+                eval(result)
             }
         }
 
@@ -186,7 +187,7 @@ function RobbotXBlock(runtime, element) {
 
         function UIRaiseError(error) {
             //TODO: do it ok
-            alert(JSON.stringify(error, null, 2))
+            console.error(JSON.stringify(error, null, 2))
         }
         /* SOME BUSINESS LOGIC */
 
@@ -234,9 +235,9 @@ function RobbotXBlock(runtime, element) {
                 top: `${y - width / 2}px`,
                 transform: `rotate(${rot}deg)`
             })
-            UIInfo.innerHTML = `Speed: ${speed} <br>
-                                Rotation: ${rot.toFixed(5)} deg <br>
-                                X: ${x.toFixed(5)} <br> Y: ${y.toFixed(5)}`
+            UIInfo.html(`Speed: ${speed} <br>
+                        Rotation: ${rot.toFixed(5)} deg <br>
+                        X: ${x.toFixed(5)} <br> Y: ${y.toFixed(5)}`)
         }
 
         function renderWorkbench() {
