@@ -25,7 +25,12 @@ class RobbotXBlock(XBlock):
         html = self.resource_string("static/html/robbot.html")
         frag = Fragment(html.format(self=self))
         frag.add_css(self.resource_string("static/css/robbot.css"))
+
+        frag.add_javascript(self.resource_string("static/js/src/errors.js"))
+        frag.add_javascript(self.resource_string("static/js/src/translator.js"))
+
         frag.add_javascript(self.resource_string("static/js/src/robbot.js"))
+
         frag.initialize_js('RobbotXBlock')
         return frag
 

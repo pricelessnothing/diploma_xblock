@@ -42,7 +42,7 @@ function RobbotXBlock(runtime, element) {
                 {
                     id: 2,
                     type: 'instructions',
-                    text: 'x = 0',
+                    text: 'let x = \'hi there\'',
                     inputs: [1],
                     outputs: [3],
                     x: 200,
@@ -51,9 +51,9 @@ function RobbotXBlock(runtime, element) {
                 {
                     id: 3,
                     type: 'instructions',
-                    text: 'oh shit',
+                    text: 'alert(x)',
                     inputs: [2],
-                    outputs: [1],
+                    outputs: [],
                     x: 300,
                     y: 300
                 }
@@ -63,6 +63,11 @@ function RobbotXBlock(runtime, element) {
         let intervalID = null
 
         let draggableBlock = null
+
+        const translator = new Translator(workbench.blocks, {
+            SPEED: robbot.speed,
+            ROT: robbot.rot
+        })
 
         /* UI ELEMENTS DECLARATION */
 
@@ -160,6 +165,13 @@ function RobbotXBlock(runtime, element) {
             blockToUpdate.y = draggableBlock[0].offsetTop
             draggableBlock = null
             renderArrows()
+            debugger
+            const result = translator.translate()
+            if (result.code) {
+                UIRaiseError(result)
+            } else {
+                translator.run()
+            }
         }
 
         const displayBlockInfo = e => {
@@ -172,6 +184,10 @@ function RobbotXBlock(runtime, element) {
             return canvas.getContext('2d')
         }
 
+        function UIRaiseError(error) {
+            //TODO: do it ok
+            alert(JSON.stringify(error, null, 2))
+        }
         /* SOME BUSINESS LOGIC */
 
         function executionCycle() {
