@@ -64,6 +64,8 @@ function RobbotXBlock(runtime, element) {
 
         let draggableBlock = null
 
+        let selectedBlock = null
+
         const translator = new Translator(workbench.blocks, {
             SPEED: 'robbot.speed',
             ROT: 'robbot.rot'
@@ -81,6 +83,7 @@ function RobbotXBlock(runtime, element) {
         const UISource_ToolbarToggler = $('#tab-content .source .toolbar .toolbar-toggler', element)
         const UIWorkbench = $('#tab-content .source #workbench', element)
         const UIBlockInfo = $('#tab-content .source .toolbar .block-info', element)
+        const UIBlockCode = $('#tab-content .source .toolbar textarea', element)
         const ctx = getCanvasContext()
 
         /* EVENT LISTENERS */
@@ -124,9 +127,14 @@ function RobbotXBlock(runtime, element) {
             if(!$(e.target).hasClass('block')) {
                 $('.block', UIWorkbench).removeClass('active')
                 UIBlockInfo.html('')
+                selectedBlock = null
             }
         })
 
+        UIBlockCode.on('blur', e => {
+            const block = workbench.blocks.filter(b => b.id === +selectedBlock.attr('id').split('-')[1])[0]
+            block.text = $(e.target).val()
+        })
         /* UTIL FUNCTIONS */
 
         const executionRun = () => {
@@ -177,7 +185,8 @@ function RobbotXBlock(runtime, element) {
 
         const displayBlockInfo = e => {
             const {id, type, text} = workbench.blocks.filter(b => b.id === +$(e.target).attr('id').split('-')[1])[0]
-            UIBlockInfo.html(`id: ${id}<br> type: ${type}<br> code: ${text}`)
+            UIBlockInfo.html(`id: ${id}<br> type: ${type}<br>`)
+            UIBlockCode.val(text)
         }
 
         function getCanvasContext() {
@@ -267,6 +276,7 @@ function RobbotXBlock(runtime, element) {
                         displayBlockInfo(e)
                         $('.block', UIWorkbench).removeClass('active')
                         $(e.target).addClass('active')
+                        selectedBlock = $(e.target)
                     })
             })
             renderArrows()

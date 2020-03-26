@@ -253,14 +253,14 @@
     box-shadow:  -1px -1px 10px 0px #ccffe0, 1px 1px 10px 0px #66c0a0;
 }
 
+#tab-content .tab-content-item.source #workbench .block.block-start {
+    border-radius: 50%;
+}
+
 /* not sure bout arrows mechanics yet */
 #tab-content .tab-content-item.source #workbench canvas {
     z-index: 1;
     pointer-events: none;
     width: 100%;
     height: 100%;
-}
-
-#tab-content .tab-content-item.source #workbench .block.block-start {
-    border-radius: 50%;
 }
