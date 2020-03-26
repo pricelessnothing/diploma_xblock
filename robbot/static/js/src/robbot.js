@@ -1,7 +1,3 @@
-/* globals $ */
-
-/* XBLOCK STUFF*/
-
 //eslint-disable-next-line no-unused-vars
 function RobbotXBlock(runtime, element) {
     // var handlerUrl = runtime.handlerUrl(element, 'test')
@@ -9,7 +5,6 @@ function RobbotXBlock(runtime, element) {
     $(function() {
 
         /* STATES */
-
         const cfg = {
             fps: 30
         }
@@ -49,9 +44,18 @@ function RobbotXBlock(runtime, element) {
                     type: 'instructions',
                     text: 'x = 0',
                     inputs: [1],
-                    outputs: [],
+                    outputs: [3],
                     x: 200,
                     y: 50
+                },
+                {
+                    id: 3,
+                    type: 'instructions',
+                    text: 'oh shit',
+                    inputs: [2],
+                    outputs: [1],
+                    x: 300,
+                    y: 300
                 }
             ]
         }
@@ -62,7 +66,7 @@ function RobbotXBlock(runtime, element) {
 
         /* UI ELEMENTS DECLARATION */
 
-        const UIRobbot = $('robbot', element)
+        const UIRobbot = $('#robbot', element)
         const UIInfo = $('#tab-content .run .toolbar .info', element)
         const UIBtnPlayPause = $('#tab-content .run .controls .play_pause', element)
         const UIBtnNextStep = $('#tab-content .run .controls .next_step', element)
@@ -71,11 +75,13 @@ function RobbotXBlock(runtime, element) {
         const UIRun_ToolbarToggler = $('#tab-content .run .toolbar .toolbar-toggler', element)
         const UISource_ToolbarToggler = $('#tab-content .source .toolbar .toolbar-toggler', element)
         const UIWorkbench = $('#tab-content .source #workbench', element)
+        const UIBlockInfo = $('#tab-content .source .toolbar .block-info', element)
+        const ctx = getCanvasContext()
 
         /* EVENT LISTENERS */
 
         UIBtnPlayPause.on('click', () => {
-            if (UIBtnPlayPause.classList.toggle('running')) {
+            if (UIBtnPlayPause[0].classList.toggle('running')) {
                 executionRun()
             } else {
                 executionPause()
@@ -109,17 +115,24 @@ function RobbotXBlock(runtime, element) {
             })
         })
 
+        UIWorkbench.on('click', e => {
+            if(!$(e.target).hasClass('block')) {
+                $('.block', UIWorkbench).removeClass('active')
+                UIBlockInfo.html('')
+            }
+        })
+
         /* UTIL FUNCTIONS */
 
         const executionRun = () => {
             intervalID = setInterval(executionCycle, 1000 / cfg.fps)
-            UIBtnPlayPause.innerHTML = '||'
+            UIBtnPlayPause.html('||')
         }
 
         const executionPause = () => {
-            UIBtnPlayPause.classList.remove('running')
+            UIBtnPlayPause.removeClass('running')
             clearInterval(intervalID)
-            UIBtnPlayPause.innerHTML = '|>'
+            UIBtnPlayPause.html('|>')
         }
 
         const dragBlock = e => {
@@ -143,12 +156,22 @@ function RobbotXBlock(runtime, element) {
             $(document).off('mousemove')
             $(document).off('mouseup')
             const blockToUpdate = workbench.blocks.filter(b => b.id === draggableBlock.data('block').id)[0]
-            console.log(blockToUpdate)
             blockToUpdate.x = draggableBlock[0].offsetLeft
             blockToUpdate.y = draggableBlock[0].offsetTop
             draggableBlock = null
-            console.log(workbench)
+            renderArrows()
         }
+
+        const displayBlockInfo = e => {
+            const {id, type, text} = workbench.blocks.filter(b => b.id === +$(e.target).attr('id').split('-')[1])[0]
+            UIBlockInfo.html(`id: ${id}<br> type: ${type}<br> code: ${text}`)
+        }
+
+        function getCanvasContext() {
+            const canvas = $('#canvas', UIWorkbench)[0]
+            return canvas.getContext('2d')
+        }
+
         /* SOME BUSINESS LOGIC */
 
         function executionCycle() {
@@ -190,9 +213,11 @@ function RobbotXBlock(runtime, element) {
 
         function renderRuntime() {
             const {x, y, width, rot, speed} = robbot
-            UIRobbot.style.left = `${x - 19.5}px`
-            UIRobbot.style.top = `${y - width / 2}px`
-            UIRobbot.style.transform = `rotate(${rot}deg)`
+            UIRobbot.css({
+                left: `${x - 19.5}px`,
+                top: `${y - width / 2}px`,
+                transform: `rotate(${rot}deg)`
+            })
             UIInfo.innerHTML = `Speed: ${speed} <br>
                                 Rotation: ${rot.toFixed(5)} deg <br>
                                 X: ${x.toFixed(5)} <br> Y: ${y.toFixed(5)}`
@@ -200,7 +225,7 @@ function RobbotXBlock(runtime, element) {
 
         function renderWorkbench() {
             const { blocks } = workbench
-            UIWorkbench.empty()
+            UIWorkbench.remove('.block')
             blocks.forEach( block => {
                 $(`<div class="block block-${block.type}" id="block-${block.id}"></div>`)
                     .data('block', block)
@@ -221,6 +246,28 @@ function RobbotXBlock(runtime, element) {
                         $(document).on('mousemove', dragBlock)
                         $(document).on('mouseup', undragBlock)
                     })
+                    .on('click', e => {
+                        displayBlockInfo(e)
+                        $('.block', UIWorkbench).removeClass('active')
+                        $(e.target).addClass('active')
+                    })
+            })
+            renderArrows()
+        }
+
+        function renderArrows() {
+            ctx.canvas.width = UIWorkbench.width()
+            ctx.canvas.height = UIWorkbench.height()
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+            const {blocks} = workbench
+            blocks.forEach(block => {
+                const nextBlocks = blocks.filter(b => block.outputs.includes(b.id))
+                nextBlocks.forEach(b => {
+                    ctx.beginPath()
+                    ctx.moveTo(block.x + 25, block.y + 25)
+                    ctx.lineTo(b.x + 25, b.y + 25)
+                    ctx.stroke()
+                })
             })
         }
 

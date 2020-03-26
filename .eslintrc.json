@@ -28,5 +28,8 @@
             "error",
             "never"
         ]
-    }
+    },
+    "plugins": [
+        "jquery"
+    ]
 }
