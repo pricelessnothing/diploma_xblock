@@ -21,7 +21,14 @@ class Translator {
                 if (res.code) {
                     return res
                 } else {
-                    this.program.push({type: 'instruction', ...res})
+                    this.program.push(...res)
+                }
+            } else if (block.type === 'timer') {
+                let res = this.translateTimer(block)
+                if (res.code) {
+                    return res
+                } else {
+                    this.program.push(res)
                 }
             }
             if (block.outputs.length) {
@@ -29,6 +36,20 @@ class Translator {
             } else {
                 break
             }
+        }
+    }
+
+    translateTimer({text, id}) {
+        const trimmed = text.trim()
+        if ('number' === typeof +trimmed && isFinite(+trimmed)) {
+            return {
+                block: id,
+                line: 0,
+                type: 'timer',
+                text: trimmed
+            }
+        } else {
+            return this.raiseError('timer-invalid-value', id, 0)
         }
     }
 
@@ -41,7 +62,7 @@ class Translator {
             if (res.code) {
                 error = this.raiseError(res.code, id, lineidx)
             } else {
-                translated.push({block: id, line: lineidx, text: res})
+                translated.push({block: id, line: lineidx, type: 'instruction', text: res})
             }
         });
         return error ? error : translated
@@ -50,7 +71,7 @@ class Translator {
     translateInstruction(text) {
         const leaves = text.split('=')
         if (leaves.length === 2) {
-            const left = this.translateVar(leaves[0])
+            const left = this.translateVar(leaves[0], true)
             const right = this.translateArithmeticExpression(leaves[1])
             if (left.code) {
                 return this.raiseError(left.code)
@@ -72,13 +93,14 @@ class Translator {
             if (this.globals[trimmed]) {
                 return this.globals[trimmed]
             } else {
-                const rVar = `robbot_user_var_${trimmed}`
-                if (!this.globals[rVar] && canDeclare) {
-                    this.vars.push(rVar)
+                if (!this.globals[trimmed] && canDeclare) {
+                    this.vars.push(trimmed)
+                    return `robbot_user_var_${trimmed}`
+                } else if (this.vars.includes(trimmed)) {
+                    return `robbot_user_var_${trimmed}`
                 } else {
                     return this.raiseError('inst-illegal-var-declaration')
                 }
-                return rVar
             }
         } else {
             return this.raiseError('inst-illegal-var-declaration')
@@ -149,4 +171,6 @@ class Translator {
     })
 
     getProg = () => this.program
+
+    getVars = () => this.vars.map(v => `robbot_user_var_${v}`)
 }

@@ -42,7 +42,7 @@ function RobbotXBlock(runtime, element) {
                 {
                     id: 2,
                     type: 'instructions',
-                    text: 'SPEED = 5*3/8**2-16+5',
+                    text: 'a = 1 \nSPEED = a\nb = 20',
                     inputs: [1],
                     outputs: [3],
                     x: 200,
@@ -50,9 +50,18 @@ function RobbotXBlock(runtime, element) {
                 },
                 {
                     id: 3,
-                    type: 'instructions',
-                    text: 'ROT 0',
+                    type: 'timer',
+                    text: '3000',
                     inputs: [2],
+                    outputs: [4],
+                    x: 250,
+                    y: 175
+                },
+                {
+                    id: 4,
+                    type: 'instructions',
+                    text: 'SPEED = b',
+                    inputs: [3],
                     outputs: [],
                     x: 300,
                     y: 300
@@ -70,6 +79,8 @@ function RobbotXBlock(runtime, element) {
             SPEED: 'robbot.speed',
             ROT: 'robbot.rot'
         })
+
+        const executor = new Executor()
 
         /* UI ELEMENTS DECLARATION */
 
@@ -177,8 +188,7 @@ function RobbotXBlock(runtime, element) {
             if (typeof result === "object") {
                 UIRaiseError(result)
             } else {
-                //TODO: separate runner
-                console.log(translator.getProg())
+                executor.execute(translator.getProg(), translator.getVars(), robbot)
             }
         }
 
