@@ -42,7 +42,7 @@ function RobbotXBlock(runtime, element) {
                 {
                     id: 2,
                     type: 'instructions',
-                    text: 'SPEED = 3',
+                    text: 'SPEED = 5*3/8**2-16+5',
                     inputs: [1],
                     outputs: [3],
                     x: 200,
@@ -51,7 +51,7 @@ function RobbotXBlock(runtime, element) {
                 {
                     id: 3,
                     type: 'instructions',
-                    text: 'ROT = 0',
+                    text: 'ROT 0',
                     inputs: [2],
                     outputs: [],
                     x: 300,
@@ -174,12 +174,11 @@ function RobbotXBlock(runtime, element) {
             draggableBlock = null
             renderArrows()
             const result = translator.translate()
-            if (result.code) {
+            if (typeof result === "object") {
                 UIRaiseError(result)
             } else {
                 //TODO: separate runner
-                console.log(result)
-                eval(result)
+                console.log(translator.getProg())
             }
         }
 
