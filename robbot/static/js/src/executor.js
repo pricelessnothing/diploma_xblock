@@ -12,27 +12,29 @@ class Executor {
 
         // console.log(this.vars, this.prog)
         this.PC = 0
-        this.executionStep()
+        this.executioniId = this.executionStep()
     }
 
-    executionStep(robbotRef) {
-        if (this.PC >= this.prog.length) return
-        const line = this.prog[this.PC]
-        console.log(Date.now(), line)
-        switch(line.type) {
-            case 'instruction':
-                setTimeout(() => {
+    executionStep() {
+        return setInterval(() => {
+            if (this.PC >= this.prog.length) {
+                clearInterval(this.executioniId)
+                return
+            }
+            const line = this.prog[this.PC]
+            console.log(Date.now(), line)
+            switch(line.type) {
+                case 'instruction':
                     eval(line.text)
-                    this.PC++
-                    this.executionStep(robbotRef)
-                }, 0)
-                break
-            case 'timer':
-                setTimeout(() => {
-                    this.executionStep(robbotRef)
-                    this.PC++
-                }, line.text)
-                break
-        }
+                    break
+                case 'timer':
+                    clearInterval(this.executioniId)
+                    setTimeout(() => {
+                        this.executioniId = this.executionStep()
+                    }, line.text)
+                    break
+            }
+            this.PC++
+        }, 0)
     }
 }
