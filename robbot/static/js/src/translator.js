@@ -13,9 +13,16 @@ class Translator {
         const blocks = this.blocks
         this.program = []
         this.vars = []
+        const visited = []
         let prevBlock = blocks.find(b => b.type === 'start')
         while(true) {
             const block = blocks.find(b => prevBlock.outputs.includes(b.id))
+            if (visited.includes(block.id)) {
+                this.program.push({type: 'jump', text: this.program.findIndex(p => p.block === block.id)})
+                return
+            } else {
+                visited.push(block.id)
+            }
             if (block.type === 'instructions') {
                 let res = this.translateInstructionBlock(block)
                 if (res.code) {

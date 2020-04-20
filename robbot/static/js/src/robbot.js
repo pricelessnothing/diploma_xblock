@@ -42,7 +42,7 @@ function RobbotXBlock(runtime, element) {
                 {
                     id: 2,
                     type: 'instructions',
-                    text: 'a = 1 \nSPEED = a\nb = 20',
+                    text: 'SPEED = 20\nROT = 0',
                     inputs: [1],
                     outputs: [3],
                     x: 200,
@@ -51,7 +51,7 @@ function RobbotXBlock(runtime, element) {
                 {
                     id: 3,
                     type: 'timer',
-                    text: '3000',
+                    text: '100',
                     inputs: [2],
                     outputs: [4],
                     x: 250,
@@ -60,9 +60,9 @@ function RobbotXBlock(runtime, element) {
                 {
                     id: 4,
                     type: 'instructions',
-                    text: 'SPEED = b',
+                    text: 'ROT = ROT + 1',
                     inputs: [3],
-                    outputs: [],
+                    outputs: [3],
                     x: 300,
                     y: 300
                 }
@@ -76,8 +76,8 @@ function RobbotXBlock(runtime, element) {
         let selectedBlock = null
 
         const translator = new Translator(workbench.blocks, {
-            SPEED: 'robbot.speed',
-            ROT: 'robbot.rot'
+            SPEED: 'robbot_instance.speed',
+            ROT: 'robbot_instance.rot'
         })
 
         const executor = new Executor()
@@ -150,6 +150,7 @@ function RobbotXBlock(runtime, element) {
 
         const executionRun = () => {
             intervalID = setInterval(executionCycle, 1000 / cfg.fps)
+            executor.execute(translator.getProg(), translator.getVars(), robbot)
             UIBtnPlayPause.html('||')
         }
 
@@ -187,8 +188,6 @@ function RobbotXBlock(runtime, element) {
             const result = translator.translate()
             if (typeof result === "object") {
                 UIRaiseError(result)
-            } else {
-                executor.execute(translator.getProg(), translator.getVars(), robbot)
             }
         }
 

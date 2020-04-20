@@ -1,9 +1,9 @@
 class Executor {
 
-    execute(prog, vars, robbotRef) {
+    execute(prog, vars, robbot) {
         this.prog = prog
         this.vars = vars
-        const robbot = robbotRef
+        this.robbot_instance = robbot
 
         this.vars.forEach(v => {
             /* eval(`var ${v} = 0`) refused to work. Hell with it, I'm not proud */
@@ -12,10 +12,10 @@ class Executor {
 
         // console.log(this.vars, this.prog)
         this.PC = 0
-        this.executioniId = this.executionStep()
+        this.executioniId = this.executionStart(this.robbot_instance)
     }
 
-    executionStep() {
+    executionStart(robbot_instance) {
         return setInterval(() => {
             if (this.PC >= this.prog.length) {
                 clearInterval(this.executioniId)
@@ -30,11 +30,22 @@ class Executor {
                 case 'timer':
                     clearInterval(this.executioniId)
                     setTimeout(() => {
-                        this.executioniId = this.executionStep()
+                        this.executioniId = this.executionStart(this.robbot_instance)
                     }, line.text)
                     break
+                case 'jump':
+                    this.PC = line.text
+                    return
             }
             this.PC++
         }, 0)
+    }
+
+    executionPause() {
+        clearInterval(this.executioniId)
+    }
+
+    executionResume() {
+        this.executioniId = executionStart(this.robbot_instance)
     }
 }
