@@ -13,15 +13,15 @@ class Translator {
         const blocks = this.blocks
         this.program = []
         this.vars = []
-        const visited = []
+        this.visited = []
         let prevBlock = blocks.find(b => b.type === 'start')
         while(true) {
             const block = blocks.find(b => prevBlock.outputs.includes(b.id))
-            if (visited.includes(block.id)) {
+            if (this.visited.includes(block.id)) {
                 this.program.push({type: 'jump', text: this.program.findIndex(p => p.block === block.id)})
                 return
             } else {
-                visited.push(block.id)
+                this.visited.push(block.id)
             }
             if (block.type === 'instructions') {
                 let res = this.translateInstructionBlock(block)
@@ -37,6 +37,11 @@ class Translator {
                 } else {
                     this.program.push(res)
                 }
+            } else if (block.type === 'condition') {
+                let res = this.translateConditionBlock(block)
+                if (typeof res === "object") {
+                    return res
+                }
             }
             if (block.outputs.length) {
                 prevBlock = block
@@ -44,6 +49,81 @@ class Translator {
                 break
             }
         }
+    }
+
+    translateConditionBlock({text, id, outputs}) {
+        const trimmed = text.replace(/\r|\n|\r\n/, '&&').trim()
+        const conditionIndex = this.program.length //to set instruction index for false branch
+        const condition = this.translateCondition(trimmed)
+        if (condition.code) {
+            return this.raiseError(res.code, id)
+        }
+        this.program.push({type: 'condition', block: id, text: condition})
+        let nextPositive = this.blocks.find(b => b.id === outputs[0])
+        while(nextPositive.type !== 'condition-merge') {
+            if (this.visited.includes(nextPositive.id)) {
+                this.program.push({
+                    type: 'jump',
+                    text: this.program.findIndex(p => p.block === nextPositive.id)
+                })
+                break
+            } else {
+                this.visited.push(nextPositive.id)
+            }
+            if (nextPositive.type === 'instructions') {
+                let res = this.translateInstructionBlock(nextPositive)
+                if (res.code) {
+                    return res
+                } else {
+                    this.program.push(...res)
+                }
+            } else if (nextPositive.type === 'timer') {
+                let res = this.translateTimer(nextPositive)
+                if (res.code) {
+                    return res
+                } else {
+                    this.program.push(res)
+                }
+            }
+            nextPositive = this.blocks.find(b => b.id === nextPositive.outputs[0])
+        }
+        const jmpIndex = this.program.length //to set PC to next instruction after true branch
+        this.program.push({type: 'jump', text: ''})
+        this.program[conditionIndex].jmpFalse = this.program.length
+
+        let nextNegative = this.blocks.find(b => b.id === outputs[1])
+        while(nextNegative.type !== 'condition-merge') {
+            if (this.visited.includes(nextNegative.id)) {
+                this.program.push({
+                    type: 'jump',
+                    text: this.program.findIndex(p => p.block === nextNegative.id)
+                })
+                break
+            } else {
+                this.visited.push(nextNegative.id)
+            }
+            if (nextNegative.type === 'instructions') {
+                let res = this.translateInstructionBlock(nextNegative)
+                if (res.code) {
+                    return res
+                } else {
+                    this.program.push(...res)
+                }
+            } else if (nextNegative.type === 'timer') {
+                let res = this.translateTimer(nextNegative)
+                if (res.code) {
+                    return res
+                } else {
+                    this.program.push(res)
+                }
+            }
+            nextNegative = this.blocks.find(b => b.id === nextNegative.outputs[1])
+        }
+        this.program[jmpIndex].text = this.program.length
+    }
+
+    translateCondition(text) {
+        return text
     }
 
     translateTimer({text, id}) {

@@ -64,6 +64,7 @@
     width: 100%;
     display: none;
     overflow: hidden;
+    position: relative;
 }
 
 #tab-content .tab-content-item.active {
@@ -74,19 +75,25 @@
 
 #tab-content .tab-content-item.source .toolbar,
 #tab-content .tab-content-item.run .toolbar {
-    position: relative;
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
     width: 500px;
     background-color: #666;
+    transition: all .3s linear;
+}
+
+.toolbar .toolbar-content {
     display: flex;
     flex-direction: column;
-    transition: all .3s linear;
+    position: relative;
     padding: 40px 10px;
 }
 
 #tab-content .tab-content-item.source .toolbar.closed,
 #tab-content .tab-content-item.run .toolbar.closed {
     width: 0;
-    padding: 0;
 }
 
 #tab-content .tab-content-item.source .toolbar.closed *:not(:first-child),
@@ -185,49 +192,12 @@
     overflow: hidden;
 }
 
-#robbot {
+#runtime canvas {
     position: absolute;
-    width: 70px;
-    height: 50px;
-    background-color: #444;
-    border-radius: 10% 50% 50% 10%;
-    top: 50px;
-    left: 100px;
-    transform-origin: calc(10% + 12.5px) 50%;
-}
-
-#robbot .wheel_container {
+    left: 0;
+    top: 0;
     width: 100%;
     height: 100%;
-    position: relative;
-}
-
-#robbot .wheel_container .wheel{
-    position: absolute;
-    background-color: #222;
-    width: 25px;
-    height: 15px;
-    left: 10%;
-}
-
-#robbot .wheel_container .wheel.left{
-    top: -5px;
-}
-
-#robbot .wheel_container .wheel.right{
-    bottom: -5px;
-}
-
-/* RUN TAB : FINISH SIGN */
-#runtime .finish-sign {
-    position: absolute;
-    left: 500px;
-    top: 500px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: #0f0;
-    border: 2px solid #00aa00;
 }
 
 /* SOURCE TAB */

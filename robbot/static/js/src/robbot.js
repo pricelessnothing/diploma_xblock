@@ -1,311 +1,381 @@
+/* globals $, Translator, Executor, Drawer */
 //eslint-disable-next-line no-unused-vars
 function RobbotXBlock(runtime, element) {
-    // var handlerUrl = runtime.handlerUrl(element, 'test')
+  // var handlerUrl = runtime.handlerUrl(element, 'test')
 
-    $(function() {
+  $(function() {
 
-        /* STATES */
-        const cfg = {
-            fps: 30
-        }
+    /* STATES */
+    const cfg = {
+      fps: 30
+    }
 
-        const robbot = {
-            x: 100,
-            y: 100,
-            rot: 90,
-            speed: 100,
-            WL: 50,
-            WR: 0,
-            width: 50,
-            length: 70
-        }
+    const robbot = {
+      x: 100,
+      y: 100,
+      rot: 0,
+      speed: 10,
+
+      colorSensor: 0,
+      distanceSensor: 0,
+
+      radius: 40,
+    }
 
 
-        const map = {
-            finish: {
-                x: 500,
-                y: 500
-            }
-        }
+    const map = {
+      finish: {
+        x: 500,
+        y: 500,
+        radius: 20
+      },
+      walls: [
+        [300, 300, 700, 300],
+        [700, 300, 700, 50]
+      ]
+    }
 
-        const workbench = {
-            blocks: [
-                {
-                    id: 1,
-                    type: 'start',
-                    text: '',
-                    inputs: [],
-                    outputs: [2],
-                    x: 50,
-                    y: 50,
-                },
-                {
-                    id: 2,
-                    type: 'instructions',
-                    text: 'SPEED = 20\nROT = 0',
-                    inputs: [1],
-                    outputs: [3],
-                    x: 200,
-                    y: 50
-                },
-                {
-                    id: 3,
-                    type: 'timer',
-                    text: '100',
-                    inputs: [2],
-                    outputs: [4],
-                    x: 250,
-                    y: 175
-                },
-                {
-                    id: 4,
-                    type: 'instructions',
-                    text: 'ROT = ROT + 1',
-                    inputs: [3],
-                    outputs: [3],
-                    x: 300,
-                    y: 300
-                }
-            ]
-        }
+    const workbench = {
+      blocks: [
+        {
+          id: 1,
+          type: 'start',
+          text: '',
+          inputs: [],
+          outputs: [2],
+          x: 50,
+          y: 150,
+        },
+        {
+          id: 2,
+          type: 'instructions',
+          text: 'SPEED = 20\nROT = 0\na = 10',
+          inputs: [1],
+          outputs: [3],
+          x: 100,
+          y: 150
+        },
+        {
+          id: 3,
+          type: 'condition',
+          text: 'robbot_instance.rot > 180 || robbot_instance.rot < 0',
+          inputs: [2],
+          outputs: [4, 5],
+          x: 150,
+          y: 150
+        },
+        {
+          id: 4,
+          type: 'instructions',
+          text: 'a = -a',
+          inputs: [3],
+          outputs: [5],
+          x: 200,
+          y: 50
+        },
+        {
+          id: 5,
+          type: 'condition-merge',
+          text: 'a = -a',
+          inputs: [3, 4],
+          outputs: [6],
+          x: 250,
+          y: 150
+        },
+        {
+          id: 6,
+          type: 'instructions',
+          text: 'ROT = ROT + a',
+          inputs: [5],
+          outputs: [7],
+          x: 300,
+          y: 150
+        },
+        {
+          id: 7,
+          type: 'timer',
+          text: '100',
+          inputs: [6],
+          outputs: [3],
+          x: 200,
+          y: 350,
+        },
+      ]
+    }
 
-        let intervalID = null
+    /* UI ELEMENTS DECLARATION */
 
-        let draggableBlock = null
+    const UIInfo = $('#tab-content .run .toolbar .info', element)
+    const UIBtnPlayPause = $('#tab-content .run .controls .play_pause', element)
+    const UIBtnNextStep = $('#tab-content .run .controls .next_step', element)
+    const UITabs = $('#tab-header .tab-header-item', element)
+    const UIContents = $('#tab-content .tab-content-item', element)
+    const UIRun_ToolbarToggler = $('#tab-content .run .toolbar .toolbar-toggler', element)
+    const UISource_ToolbarToggler = $('#tab-content .source .toolbar .toolbar-toggler', element)
+    const UIWorkbench = $('#tab-content .source #workbench', element)
+    const UIBlockInfo = $('#tab-content .source .toolbar .block-info', element)
+    const UIBlockCode = $('#tab-content .source .toolbar textarea', element)
+    const ctx = getCanvasContext($('#canvas', UIWorkbench)[0])
+    const mapCanvas = $('#map_canvas', element)
+    const drawingCanvas = $('#drawing_canvas', element)
+    const robbotCanvas = $('#robbot_canvas', element)
 
-        let selectedBlock = null
+    let intervalID = null
 
-        const translator = new Translator(workbench.blocks, {
-            SPEED: 'robbot_instance.speed',
-            ROT: 'robbot_instance.rot'
+    let draggableBlock = null
+
+    let selectedBlock = null
+
+    const translator = new Translator(workbench.blocks, {
+      SPEED: 'robbot_instance.speed',
+      ROT: 'robbot_instance.rot'
+    })
+
+    const executor = new Executor()
+
+    const drawer = new Drawer(robbotCanvas, drawingCanvas, mapCanvas)
+
+    /* EVENT LISTENERS */
+
+    UIBtnPlayPause.on('click', () => {
+      if (UIBtnPlayPause[0].classList.toggle('running')) {
+        executionRun()
+      } else {
+        executionPause()
+      }
+    })
+
+    UIBtnNextStep.on('click', () => {
+      executionPause()
+      executionCycle()
+    })
+
+    UIRun_ToolbarToggler.on('click', e => {
+      $(e.target).parent().parent().toggleClass('closed')
+      $(e.target).toggleClass('closed')
+      $(e.target).html('X' === e.target.innerHTML ? '<' : 'X')
+    })
+
+    UISource_ToolbarToggler.on('click', e => {
+      $(e.target).parent().parent().toggleClass('closed')
+      $(e.target).toggleClass('closed')
+      $(e.target).html('X' === e.target.innerHTML ? '<' : 'X')
+    })
+
+    UITabs.each((i, tab) => {
+      $(tab).on('click', e => {
+        UITabs.each((i, el) => $(el).removeClass('active'))
+        UIContents.each((i, el) => $(el).removeClass('active'))
+        const selectedContent = $(`#tab-content .${e.target.getAttribute('data-toggle')}`)
+        selectedContent.addClass('active')
+        $(e.target).addClass('active')
+      })
+    })
+
+    UIWorkbench.on('click', e => {
+      if(!$(e.target).hasClass('block')) {
+        $('.block', UIWorkbench).removeClass('active')
+        UIBlockInfo.html('')
+        selectedBlock = null
+      }
+    })
+
+    UIBlockCode.on('blur', e => {
+      const block = workbench.blocks.filter(b => b.id === +selectedBlock.attr('id').split('-')[1])[0]
+      block.text = $(e.target).val()
+    })
+    /* UTIL FUNCTIONS */
+
+    const executionRun = () => {
+      intervalID = setInterval(executionCycle, 1000 / cfg.fps)
+      executor.execute(translator.getProg(), translator.getVars(), robbot)
+      UIBtnPlayPause.html('||')
+    }
+
+    const executionPause = () => {
+      UIBtnPlayPause.removeClass('running')
+      clearInterval(intervalID)
+      UIBtnPlayPause.html('|>')
+    }
+
+    const dragBlock = e => {
+      e = e || window.event
+      e.preventDefault()
+      if (draggableBlock) {
+        const x = draggableBlock.data('blockDraggingX') - e.clientX
+        const y = draggableBlock.data('blockDraggingY') - e.clientY
+        draggableBlock.data({
+          blockDraggingX: e.clientX,
+          blockDraggingY: e.clientY
         })
-
-        const executor = new Executor()
-
-        /* UI ELEMENTS DECLARATION */
-
-        const UIRobbot = $('#robbot', element)
-        const UIInfo = $('#tab-content .run .toolbar .info', element)
-        const UIBtnPlayPause = $('#tab-content .run .controls .play_pause', element)
-        const UIBtnNextStep = $('#tab-content .run .controls .next_step', element)
-        const UITabs = $('#tab-header .tab-header-item', element)
-        const UIContents = $('#tab-content .tab-content-item', element)
-        const UIRun_ToolbarToggler = $('#tab-content .run .toolbar .toolbar-toggler', element)
-        const UISource_ToolbarToggler = $('#tab-content .source .toolbar .toolbar-toggler', element)
-        const UIWorkbench = $('#tab-content .source #workbench', element)
-        const UIBlockInfo = $('#tab-content .source .toolbar .block-info', element)
-        const UIBlockCode = $('#tab-content .source .toolbar textarea', element)
-        const ctx = getCanvasContext()
-
-        /* EVENT LISTENERS */
-
-        UIBtnPlayPause.on('click', () => {
-            if (UIBtnPlayPause[0].classList.toggle('running')) {
-                executionRun()
-            } else {
-                executionPause()
-            }
+        draggableBlock.css({
+          top: `${(draggableBlock[0].offsetTop - y)}px`,
+          left: `${(draggableBlock[0].offsetLeft - x)}px`
         })
+      }
+    }
 
-        UIBtnNextStep.on('click', () => {
-            executionPause()
-            executionCycle()
-        })
+    const undragBlock = () => {
+      $(document).off('mousemove')
+      $(document).off('mouseup')
+      const blockToUpdate = workbench.blocks.filter(b => b.id === draggableBlock.data('block').id)[0]
+      blockToUpdate.x = draggableBlock[0].offsetLeft
+      blockToUpdate.y = draggableBlock[0].offsetTop
+      draggableBlock = null
+      renderArrows()
+      const result = translator.translate()
+      if (typeof result === 'object') {
+        UIRaiseError(result)
+      }
+    }
 
-        UIRun_ToolbarToggler.on('click', e => {
-            e.target.parentNode.classList.toggle('closed')
-            e.target.classList.toggle('closed')
-            e.target.innerHTML = 'X' === e.target.innerHTML ? '<' : 'X'
-        })
+    const displayBlockInfo = e => {
+      const {id, type, text} = workbench.blocks.filter(b => b.id === +$(e.target).attr('id').split('-')[1])[0]
+      UIBlockInfo.html(`id: ${id}<br> type: ${type}<br>`)
+      UIBlockCode.val(text)
+    }
 
-        UISource_ToolbarToggler.on('click', e => {
-            e.target.parentNode.classList.toggle('closed')
-            e.target.classList.toggle('closed')
-            e.target.innerHTML = 'X' === e.target.innerHTML ? '<' : 'X'
-        })
+    function getCanvasContext(canvas) {
+      return canvas.getContext('2d')
+    }
 
-        UITabs.each((i, tab) => {
-            $(tab).on('click', e => {
-                UITabs.each((i, el) => $(el).removeClass('active'))
-                UIContents.each((i, el) => $(el).removeClass('active'))
-                const selectedContent = $(`#tab-content .${e.target.getAttribute('data-toggle')}`)
-                selectedContent.addClass('active')
-                $(e.target).addClass('active')
-            })
-        })
+    function UIRaiseError(error) {
+      //TODO: do it ok
+      console.error(JSON.stringify(error, null, 2))
+    }
+    /* SOME BUSINESS LOGIC */
 
-        UIWorkbench.on('click', e => {
-            if(!$(e.target).hasClass('block')) {
-                $('.block', UIWorkbench).removeClass('active')
-                UIBlockInfo.html('')
-                selectedBlock = null
-            }
-        })
+    function executionCycle() {
+      console.time('bench')
+      updateRobbotState()
+      renderRuntime()
+      if (Math.abs(robbot.x - map.finish.x) < 10 && Math.abs(robbot.y - map.finish.y) < 10) {
+        executionPause()
+        alert('You win!')
+      }
+      console.timeEnd('bench')
+    }
 
-        UIBlockCode.on('blur', e => {
-            const block = workbench.blocks.filter(b => b.id === +selectedBlock.attr('id').split('-')[1])[0]
-            block.text = $(e.target).val()
-        })
-        /* UTIL FUNCTIONS */
+    function updateRobbotState() {
+      const {rot, speed} = robbot
+      const dS = speed / cfg.fps
+      robbot.y += Math.sin(rot / 180 * Math.PI) * dS
+      robbot.x += Math.cos(rot / 180 * Math.PI) * dS
+      robbot.colorSensor = drawer.getUnderlayingColor()
+      robbot.distanceSensor = getDistance()
+    }
 
-        const executionRun = () => {
-            intervalID = setInterval(executionCycle, 1000 / cfg.fps)
-            executor.execute(translator.getProg(), translator.getVars(), robbot)
-            UIBtnPlayPause.html('||')
-        }
+    function renderRuntime() {
+      const {x, y, rot, speed, colorSensor, distanceSensor} = robbot
+      UIInfo.html(`Speed: ${speed} <br>
+                        Rotation: ${rot.toFixed(5)} deg <br>
+                        X: ${x.toFixed(5)} <br> Y: ${y.toFixed(5)} <br>
+                        Color Sensor: ${colorSensor} <br>
+                        Distance Sensor: ${distanceSensor.toFixed(0)}`)
+      drawer.drawRobbot(robbot)
+    }
 
-        const executionPause = () => {
-            UIBtnPlayPause.removeClass('running')
-            clearInterval(intervalID)
-            UIBtnPlayPause.html('|>')
-        }
-
-        const dragBlock = e => {
+    function renderWorkbench() {
+      const { blocks } = workbench
+      UIWorkbench.remove('.block')
+      blocks.forEach( block => {
+        $(`<div class="block block-${block.type}" id="block-${block.id}"></div>`)
+          .data('block', block)
+          .css({
+            left: `${block.x}px`,
+            top: `${block.y}px`
+          })
+          .appendTo(UIWorkbench)
+          .on('mousedown', e => {
             e = e || window.event
             e.preventDefault()
-            if (draggableBlock) {
-                const x = draggableBlock.data('blockDraggingX') - e.clientX
-                const y = draggableBlock.data('blockDraggingY') - e.clientY
-                draggableBlock.data({
-                    blockDraggingX: e.clientX,
-                    blockDraggingY: e.clientY
-                })
-                draggableBlock.css({
-                    top: `${(draggableBlock[0].offsetTop - y)}px`,
-                    left: `${(draggableBlock[0].offsetLeft - x)}px`
-                })
-            }
-        }
+            draggableBlock = $(e.target)
+            $(e.target)
+              .data({
+                blockDraggingX: e.clientX,
+                blockDraggingY: e.clientY
+              })
+            $(document).on('mousemove', dragBlock)
+            $(document).on('mouseup', undragBlock)
+          })
+          .on('click', e => {
+            displayBlockInfo(e)
+            $('.block', UIWorkbench).removeClass('active')
+            $(e.target).addClass('active')
+            selectedBlock = $(e.target)
+          })
+      })
+      renderArrows()
+    }
 
-        const undragBlock = () => {
-            $(document).off('mousemove')
-            $(document).off('mouseup')
-            const blockToUpdate = workbench.blocks.filter(b => b.id === draggableBlock.data('block').id)[0]
-            blockToUpdate.x = draggableBlock[0].offsetLeft
-            blockToUpdate.y = draggableBlock[0].offsetTop
-            draggableBlock = null
-            renderArrows()
-            const result = translator.translate()
-            if (typeof result === "object") {
-                UIRaiseError(result)
-            }
-        }
+    function renderArrows() {
+      ctx.canvas.width = UIWorkbench.width()
+      ctx.canvas.height = UIWorkbench.height()
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+      const {blocks} = workbench
+      blocks.forEach(block => {
+        const nextBlocks = blocks.filter(b => block.outputs.includes(b.id))
+        nextBlocks.forEach(b => {
+          ctx.beginPath()
+          ctx.moveTo(block.x + 25, block.y + 25)
+          ctx.lineTo(b.x + 25, b.y + 25)
+          ctx.stroke()
+        })
+      })
+    }
 
-        const displayBlockInfo = e => {
-            const {id, type, text} = workbench.blocks.filter(b => b.id === +$(e.target).attr('id').split('-')[1])[0]
-            UIBlockInfo.html(`id: ${id}<br> type: ${type}<br>`)
-            UIBlockCode.val(text)
-        }
+    function getDistance() {
+      const {x, y, rot, radius} = robbot
+      const lidar = [
+        x + radius * Math.cos(rot * Math.PI / 180),
+        y + radius * Math.sin(rot * Math.PI / 180),
+        x + (radius + 1000) * Math.cos(rot * Math.PI / 180),
+        y + (radius + 1000) * Math.sin(rot * Math.PI / 180)
+      ]
+      let distance = 1000
+      let x1 = lidar[0]
+      let y1 = lidar[1]
+      let x2 = lidar[2]
+      let y2 = lidar[3]
 
-        function getCanvasContext() {
-            const canvas = $('#canvas', UIWorkbench)[0]
-            return canvas.getContext('2d')
-        }
+      if (x1 > x2) {
+        [x1, x2] = [x2, x1]
+      }
+      if (y1 > y2) {
+        [y1, y2] = [y2, y1]
+      }
 
-        function UIRaiseError(error) {
-            //TODO: do it ok
-            console.error(JSON.stringify(error, null, 2))
+      map.walls.forEach(wall => {
+        let x3 = wall[0]
+        let y3 = wall[1]
+        let x4 = wall[2]
+        let y4 = wall[3]
+        if (x3 > x4) {
+          [x3, x4] = [x4, x3]
         }
-        /* SOME BUSINESS LOGIC */
-
-        function executionCycle() {
-            moveRobbot()
-            renderRuntime()
-            if (Math.abs(robbot.x - map.finish.x) < 10 && Math.abs(robbot.y - map.finish.y) < 10) {
-                executionPause()
-                alert('You win!')
-            }
+        if (y3 > y4) {
+          [y3, y4] = [y4, y3]
         }
+        const u = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) /
+                   ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1))
+        const intersectionX = x1 + u * (x2 - x1)
+        const intersectionY = y1 + u * (y2 - y1)
 
-        //eslint-disable-next-line no-unused-vars
-        function move2motors() {
-            let dS //distance covered per time quant
-            if (robbot.WL === robbot.WR) {
-                dS = robbot.WL / cfg.fps
-            }
-            else {
-                let speed = (robbot.WL + robbot.WR) / 2
-                let rAvg = (robbot.width * robbot.WR) / (robbot.WL - robbot.WR) + robbot.width / 2
-                let alpha = (speed) / (cfg.fps * rAvg)
-                let dRot = alpha / 2
-                let beta = 90 - dRot
-                dS = rAvg * Math.sin(alpha) / Math.sin(beta)
-                robbot.rot += dRot
-            }
-            let dY = Math.sin(robbot.rot) * dS
-            let dX = Math.cos(robbot.rot) * dS
-            robbot.y += dY
-            robbot.x += dX
+        if (isFinite(intersectionX) && intersectionX >= x3 && intersectionX <= x4 &&
+            intersectionX >= x1 && intersectionX <= x2 &&
+            isFinite(intersectionY) && intersectionY >= y3 && intersectionY <= y4 &&
+            intersectionY >= y1 && intersectionY <= y2) {
+          const d = Math.sqrt((intersectionX - lidar[0]) ** 2 + (intersectionY - lidar[1]) ** 2)
+          if (d < distance) {
+            distance = d
+          }
         }
+      })
+      return distance
+    }
 
-        function moveRobbot() {
-            const {rot, speed} = robbot
-            const dS = speed / cfg.fps
-            robbot.y += Math.sin(rot / 180 * Math.PI) * dS
-            robbot.x += Math.cos(rot / 180 * Math.PI) * dS
-        }
-
-        function renderRuntime() {
-            const {x, y, width, rot, speed} = robbot
-            UIRobbot.css({
-                left: `${x - 19.5}px`,
-                top: `${y - width / 2}px`,
-                transform: `rotate(${rot}deg)`
-            })
-            UIInfo.html(`Speed: ${speed} <br>
-                        Rotation: ${rot.toFixed(5)} deg <br>
-                        X: ${x.toFixed(5)} <br> Y: ${y.toFixed(5)}`)
-        }
-
-        function renderWorkbench() {
-            const { blocks } = workbench
-            UIWorkbench.remove('.block')
-            blocks.forEach( block => {
-                $(`<div class="block block-${block.type}" id="block-${block.id}"></div>`)
-                    .data('block', block)
-                    .css({
-                        left: `${block.x}px`,
-                        top: `${block.y}px`
-                    })
-                    .appendTo(UIWorkbench)
-                    .on('mousedown', e => {
-                        e = e || window.event
-                        e.preventDefault()
-                        draggableBlock = $(e.target)
-                        $(e.target)
-                            .data({
-                                blockDraggingX: e.clientX,
-                                blockDraggingY: e.clientY
-                            })
-                        $(document).on('mousemove', dragBlock)
-                        $(document).on('mouseup', undragBlock)
-                    })
-                    .on('click', e => {
-                        displayBlockInfo(e)
-                        $('.block', UIWorkbench).removeClass('active')
-                        $(e.target).addClass('active')
-                        selectedBlock = $(e.target)
-                    })
-            })
-            renderArrows()
-        }
-
-        function renderArrows() {
-            ctx.canvas.width = UIWorkbench.width()
-            ctx.canvas.height = UIWorkbench.height()
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-            const {blocks} = workbench
-            blocks.forEach(block => {
-                const nextBlocks = blocks.filter(b => block.outputs.includes(b.id))
-                nextBlocks.forEach(b => {
-                    ctx.beginPath()
-                    ctx.moveTo(block.x + 25, block.y + 25)
-                    ctx.lineTo(b.x + 25, b.y + 25)
-                    ctx.stroke()
-                })
-            })
-        }
-
-        renderWorkbench()
-    })
+    drawer.drawMap(map)
+    renderWorkbench()
+    renderRuntime()
+  })
 }

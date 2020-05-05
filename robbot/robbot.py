@@ -29,6 +29,7 @@ class RobbotXBlock(XBlock):
         frag.add_javascript(self.resource_string("static/js/src/errors.js"))
         frag.add_javascript(self.resource_string("static/js/src/translator.js"))
         frag.add_javascript(self.resource_string("static/js/src/executor.js"))
+        frag.add_javascript(self.resource_string("static/js/src/drawer.js"))
 
         frag.add_javascript(self.resource_string("static/js/src/robbot.js"))
 

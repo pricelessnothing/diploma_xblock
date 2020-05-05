@@ -10,9 +10,9 @@ class Executor {
             window[v] = 0
         });
 
-        // console.log(this.vars, this.prog)
+        console.log(this.vars, this.prog)
         this.PC = 0
-        this.executioniId = this.executionStart(this.robbot_instance)
+        // this.executioniId = this.executionStart(this.robbot_instance)
     }
 
     executionStart(robbot_instance) {
