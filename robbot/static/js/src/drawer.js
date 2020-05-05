@@ -4,12 +4,14 @@ class Drawer {
  *
  * @param {Canvas} robbot_canvas
  * @param {Canvas} drawing_canvas
+ * @param {Canvas} map_canvas
  */
   constructor(robbot_canvas, drawing_canvas, map_canvas) {
     this.robbot_ctx = robbot_canvas[0].getContext('2d')
     this.robbot_ctx.canvas.width = robbot_canvas.width()
     this.robbot_ctx.canvas.height = robbot_canvas.height()
 
+    this.drawing_canvas = drawing_canvas
     this.drawing_ctx = drawing_canvas[0].getContext('2d')
     this.drawing_ctx.canvas.width = drawing_canvas.width()
     this.drawing_ctx.canvas.height = drawing_canvas.height()
@@ -17,11 +19,6 @@ class Drawer {
     this.map_ctx = map_canvas[0].getContext('2d')
     this.map_ctx.canvas.width = map_canvas.width()
     this.map_ctx.canvas.height = map_canvas.height()
-
-    this.drawing_ctx.moveTo(150, 0)
-    this.drawing_ctx.lineTo(150, 500)
-    this.drawing_ctx.lineWidth = 30
-    this.drawing_ctx.stroke()
   }
 
   drawRobbot({x, y, rot, radius, distanceSensor}) {
@@ -39,8 +36,6 @@ class Drawer {
       x + (radius + distanceSensor) * Math.cos(rot * Math.PI / 180),
       y + (radius + distanceSensor) * Math.sin(rot * Math.PI / 180)
     ]
-
-    console.log(lidar)
 
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
@@ -115,5 +110,38 @@ class Drawer {
 
   getUnderlayingColor () {
     return this.underlayingColor
+  }
+
+  drawOn() {
+    this.drawing_canvas.css('z-index', 4)
+    this.drawing_canvas.on('mousedown', e => {
+      const ctx = this.drawing_ctx
+      let draw = true
+      ctx.beginPath()
+      ctx.fillStyle = 'black'
+      ctx.moveTo(e.offsetX, e.offsetY)
+      this.drawing_canvas.on('mousemove', e => {
+        if (draw){
+          ctx.lineTo(e.offsetX, e.offsetY)
+          ctx.stroke()
+        }
+      })
+      this.drawing_canvas.on('mouseup', () => {
+        draw = false
+        ctx.moveTo(e.offsetX, e.offsetY)
+        ctx.stroke()
+        ctx.closePath()
+        this.drawing_canvas.off('mousemove')
+      })
+    })
+  }
+
+  drawOff() {
+    this.drawing_canvas.css('z-index', 1)
+    this.drawing_canvas.off('mousedown')
+  }
+
+  setDrawingStrokeWidth(strokeWidth = 15) {
+    this.drawing_ctx.lineWidth = +strokeWidth
   }
 }

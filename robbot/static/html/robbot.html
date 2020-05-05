@@ -20,11 +20,11 @@
         <div class="tab-content-item run active">
             <div id="runtime">
 
-                <canvas id="map_canvas"></canvas>
-                <canvas id="drawing_canvas"></canvas>
-                <canvas id="robbot_canvas"></canvas>
+                <canvas id="drawing_canvas" style="z-index: 1"></canvas>
+                <canvas id="map_canvas" style="z-index: 2"></canvas>
+                <canvas id="robbot_canvas" style="z-index: 3"></canvas>
 
-                <div class="controls">
+                <div class="controls" style="z-index: 5">
                     <div class="control play_pause">|></div>
                     <div class="control next_step">>></div>
                 </div>
@@ -33,10 +33,12 @@
                 <div class="toolbar-content">
                     <div class="toolbar-toggler">X</div>
                     <div class="info"></div>
+                    <div class="drawing">
+                        <button class="drawing-toggler">Draw</button>
+                        <input class="stroke-width" type="range" min="5" max="50" value="15">
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- <script src="../js/src/translator.js"></script> -->
 </div>

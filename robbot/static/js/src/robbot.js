@@ -115,6 +115,9 @@ function RobbotXBlock(runtime, element) {
     const UIWorkbench = $('#tab-content .source #workbench', element)
     const UIBlockInfo = $('#tab-content .source .toolbar .block-info', element)
     const UIBlockCode = $('#tab-content .source .toolbar textarea', element)
+    const UIDrawingToggler = $('#tab-content .tab-content-item.run .drawing .drawing-toggler', element)
+    const UIDrawingWidth = $('#tab-content .tab-content-item.run .drawing .stroke-width', element)
+
     const ctx = getCanvasContext($('#canvas', UIWorkbench)[0])
     const mapCanvas = $('#map_canvas', element)
     const drawingCanvas = $('#drawing_canvas', element)
@@ -148,6 +151,20 @@ function RobbotXBlock(runtime, element) {
     UIBtnNextStep.on('click', () => {
       executionPause()
       executionCycle()
+    })
+
+    UIDrawingToggler.on('click', e => {
+      $(e.target).toggleClass('active')
+      if($(e.target).hasClass('active')) {
+        drawer.setDrawingStrokeWidth(UIDrawingWidth.val())
+        drawer.drawOn()
+      } else {
+        drawer.drawOff()
+      }
+    })
+
+    UIDrawingWidth.on('change', e => {
+      drawer.setDrawingStrokeWidth($(e.target).val())
     })
 
     UIRun_ToolbarToggler.on('click', e => {
