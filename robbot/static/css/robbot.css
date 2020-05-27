@@ -207,10 +207,12 @@
     box-shadow: 1px 1px 5px 0px #555, -1px -1px 5px 0px #777;
     padding: 10px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
 }
 
-#tab-content .tab-content-item.run .drawing .drawing-toggler {
+#tab-content .tab-content-item.run .drawing .drawing-toggler,
+#tab-content .tab-content-item.run .drawing .eraser-toggler{
     margin: 10px;
     border: none;
     outline: none;
@@ -225,9 +227,15 @@
 }
 
 #tab-content .tab-content-item.run .drawing .drawing-toggler:hover,
-#tab-content .tab-content-item.run .drawing .drawing-toggler.active {
+#tab-content .tab-content-item.run .drawing .drawing-toggler.active,
+#tab-content .tab-content-item.run .drawing .eraser-toggler:hover,
+#tab-content .tab-content-item.run .drawing .eraser-toggler.active  {
     box-shadow: 1px 1px 5px 0px #777, -1px -1px 5px 0px #555;
     text-shadow: 0 0 4px #aaf0d1;
+}
+
+#tab-content .tab-content-item.run .drawing input.stroke-width {
+    width: 100%;
 }
 
 /* SOURCE TAB */
@@ -267,6 +275,15 @@
 
 #tab-content .tab-content-item.source #workbench .block.block-timer {
     background-image: url('https://image.flaticon.com/icons/svg/1407/1407140.svg');
+}
+
+#tab-content .tab-content-item.source #workbench .block.block-condition {
+    background-image: url('https://t4.ftcdn.net/jpg/03/14/54/49/240_F_314544996_A9zyFefNWNlokq2ApKuaJy1fyZbI8tU9.jpg');
+}
+
+#tab-content .tab-content-item.source #workbench .block.block-condition-merge{
+    background-image: url('https://t4.ftcdn.net/jpg/03/14/54/49/240_F_314544996_A9zyFefNWNlokq2ApKuaJy1fyZbI8tU9.jpg');
+    transform: rotate(180deg);
 }
 
 /* not sure bout arrows mechanics yet */

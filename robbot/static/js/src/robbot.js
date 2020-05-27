@@ -17,7 +17,7 @@ function RobbotXBlock(runtime, element) {
       speed: 10,
 
       colorSensor: 0,
-      distanceSensor: 0,
+      distanceSensor: 1000,
 
       radius: 40,
     }
@@ -30,7 +30,6 @@ function RobbotXBlock(runtime, element) {
         radius: 20
       },
       walls: [
-        [300, 300, 700, 300],
         [700, 300, 700, 50]
       ]
     }
@@ -43,61 +42,51 @@ function RobbotXBlock(runtime, element) {
           text: '',
           inputs: [],
           outputs: [2],
-          x: 50,
+          x: 200,
           y: 150,
         },
         {
           id: 2,
           type: 'instructions',
-          text: 'SPEED = 20\nROT = 0\na = 10',
+          text: 'SPEED = 50\nROT = 0\n',
           inputs: [1],
           outputs: [3],
-          x: 100,
+          x: 300,
           y: 150
         },
         {
           id: 3,
           type: 'condition',
-          text: 'robbot_instance.rot > 180 || robbot_instance.rot < 0',
-          inputs: [2],
+          text: 'DISTANCE < 150',
+          inputs: [2, 6],
           outputs: [4, 5],
-          x: 150,
+          x: 400,
           y: 150
         },
         {
           id: 4,
           type: 'instructions',
-          text: 'a = -a',
+          text: 'ROT = 90',
           inputs: [3],
           outputs: [5],
-          x: 200,
-          y: 50
+          x: 500,
+          y: 150
         },
         {
           id: 5,
           type: 'condition-merge',
-          text: 'a = -a',
           inputs: [3, 4],
           outputs: [6],
-          x: 250,
-          y: 150
+          x: 450,
+          y: 350
         },
         {
           id: 6,
-          type: 'instructions',
-          text: 'ROT = ROT + a',
-          inputs: [5],
-          outputs: [7],
-          x: 300,
-          y: 150
-        },
-        {
-          id: 7,
           type: 'timer',
           text: '100',
-          inputs: [6],
+          inputs: [5],
           outputs: [3],
-          x: 200,
+          x: 350,
           y: 350,
         },
       ]
@@ -116,6 +105,7 @@ function RobbotXBlock(runtime, element) {
     const UIBlockInfo = $('#tab-content .source .toolbar .block-info', element)
     const UIBlockCode = $('#tab-content .source .toolbar textarea', element)
     const UIDrawingToggler = $('#tab-content .tab-content-item.run .drawing .drawing-toggler', element)
+    const UIEraserToggler = $('#tab-content .tab-content-item.run .drawing .eraser-toggler', element)
     const UIDrawingWidth = $('#tab-content .tab-content-item.run .drawing .stroke-width', element)
 
     const ctx = getCanvasContext($('#canvas', UIWorkbench)[0])
@@ -131,7 +121,9 @@ function RobbotXBlock(runtime, element) {
 
     const translator = new Translator(workbench.blocks, {
       SPEED: 'robbot_instance.speed',
-      ROT: 'robbot_instance.rot'
+      ROT: 'robbot_instance.rot',
+      COLOR: 'robbot_instance.colorSensor',
+      DISTANCE: 'robbot_instance.distanceSensor'
     })
 
     const executor = new Executor()
@@ -153,11 +145,25 @@ function RobbotXBlock(runtime, element) {
       executionCycle()
     })
 
+    UIEraserToggler.on('click', e => {
+      $(e.target).toggleClass('active')
+      if($(e.target).hasClass('active')) {
+        UIDrawingToggler.removeClass('active')
+        drawer.setDrawingStrokeWidth(UIDrawingWidth.val())
+        drawer.drawOn()
+        drawer.setDrawingMode('erase')
+      } else {
+        drawer.drawOff()
+      }
+    })
+
     UIDrawingToggler.on('click', e => {
       $(e.target).toggleClass('active')
       if($(e.target).hasClass('active')) {
+        UIEraserToggler.removeClass('active')
         drawer.setDrawingStrokeWidth(UIDrawingWidth.val())
         drawer.drawOn()
+        drawer.setDrawingMode('draw')
       } else {
         drawer.drawOff()
       }

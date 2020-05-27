@@ -15,6 +15,7 @@ class Drawer {
     this.drawing_ctx = drawing_canvas[0].getContext('2d')
     this.drawing_ctx.canvas.width = drawing_canvas.width()
     this.drawing_ctx.canvas.height = drawing_canvas.height()
+    this.drawing_mode = 'draw'
 
     this.map_ctx = map_canvas[0].getContext('2d')
     this.map_ctx.canvas.width = map_canvas.width()
@@ -116,7 +117,11 @@ class Drawer {
     this.drawing_canvas.css('z-index', 4)
     this.drawing_canvas.on('mousedown', e => {
       const ctx = this.drawing_ctx
-      let draw = true
+      let draw = this.drawing_mode === 'draw'
+      ctx.gloglobalCompositeOperation =
+      this.drawing_mode === 'draw' ?
+        'source-over' :
+        'destination-out'
       ctx.beginPath()
       ctx.fillStyle = 'black'
       ctx.moveTo(e.offsetX, e.offsetY)
@@ -124,6 +129,8 @@ class Drawer {
         if (draw){
           ctx.lineTo(e.offsetX, e.offsetY)
           ctx.stroke()
+        } else {
+          //TODO: erase
         }
       })
       this.drawing_canvas.on('mouseup', () => {
@@ -134,6 +141,10 @@ class Drawer {
         this.drawing_canvas.off('mousemove')
       })
     })
+  }
+
+  setDrawingMode(mode) {
+    this.drawing_mode = mode
   }
 
   drawOff() {
