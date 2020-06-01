@@ -126,7 +126,7 @@ class Drawer {
       ctx.fillStyle = 'black'
       ctx.moveTo(e.offsetX, e.offsetY)
       this.drawing_canvas.on('mousemove', e => {
-        if (draw){
+        if (draw) {
           ctx.lineTo(e.offsetX, e.offsetY)
           ctx.stroke()
         } else {

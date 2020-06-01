@@ -102,8 +102,16 @@ function RobbotXBlock(runtime, element) {
     const UIRun_ToolbarToggler = $('#tab-content .run .toolbar .toolbar-toggler', element)
     const UISource_ToolbarToggler = $('#tab-content .source .toolbar .toolbar-toggler', element)
     const UIWorkbench = $('#tab-content .source #workbench', element)
+    const UIBlockInfoWrapper = $('#tab-content .source .toolbar .block-info-wrapper', element)
     const UIBlockInfo = $('#tab-content .source .toolbar .block-info', element)
     const UIBlockCode = $('#tab-content .source .toolbar textarea', element)
+    const UIBlockInputs = $('#tab-content .source .toolbar #inputs', element)
+    const UIBlockOutputs = $('#tab-content .source .toolbar #outputs', element)
+    const UIRemoveBlock = $('#tab-content .source .toolbar #block-remove', element)
+    const UINewInstruction = $('#tab-content .source .toolbar #new-instruction', element)
+    const UINewCondition = $('#tab-content .source .toolbar #new-condition', element)
+    const UINewConditionMerge = $('#tab-content .source .toolbar #new-condition-merge', element)
+    const UINewTimer = $('#tab-content .source .toolbar #new-timer', element)
     const UIDrawingToggler = $('#tab-content .tab-content-item.run .drawing .drawing-toggler', element)
     const UIEraserToggler = $('#tab-content .tab-content-item.run .drawing .eraser-toggler', element)
     const UIDrawingWidth = $('#tab-content .tab-content-item.run .drawing .stroke-width', element)
@@ -198,16 +206,104 @@ function RobbotXBlock(runtime, element) {
     UIWorkbench.on('click', e => {
       if(!$(e.target).hasClass('block')) {
         $('.block', UIWorkbench).removeClass('active')
-        UIBlockInfo.html('')
+        UIBlockInfoWrapper.hide()
         selectedBlock = null
       }
+      console.log(selectedBlock)
     })
 
     UIBlockCode.on('blur', e => {
       const block = workbench.blocks.filter(b => b.id === +selectedBlock.attr('id').split('-')[1])[0]
       block.text = $(e.target).val()
     })
+
+    UIBlockInputs.on('blur', e => {
+      const block = workbench.blocks.filter(b => b.id === +selectedBlock.attr('id').split('-')[1])[0]
+      block.inputs = $(e.target).val().split(',').map(v => +v).filter(v => typeof v === 'number')
+    })
+
+    UIBlockOutputs.on('blur', e => {
+      const block = workbench.blocks.filter(b => b.id === +selectedBlock.attr('id').split('-')[1])[0]
+      block.outputs = $(e.target).val().split(',').map(v => +v).filter(v => typeof v === 'number')
+    })
+
+    UIRemoveBlock.on('click', () => {
+      const block = workbench.blocks.filter(b => b.id === +selectedBlock.attr('id').split('-')[1])[0]
+      if (block.type !== 'start') {
+        workbench.blocks = workbench.blocks.filter(b => b.id !== block.id)
+        workbench.blocks.forEach(b => {
+          b.inputs = b.inputs.filter(id => id !== block.id)
+          b.outputs = b.outputs.filter(id => id !== block.id)
+        })
+        renderWorkbench()
+      } else {
+        alert('Can not delete start block')
+      }
+    })
+
+    UINewInstruction.on('click', () => {
+      workbench.blocks.push({
+        id: getFreeId(),
+        type: 'instructions',
+        text: '',
+        inputs: [],
+        outputs: [],
+        x: 100,
+        y: 100,
+      })
+      renderWorkbench()
+    })
+
+    UINewCondition.on('click', () => {
+      workbench.blocks.push({
+        id: getFreeId(),
+        type: 'condition',
+        text: '',
+        inputs: [],
+        outputs: [],
+        x: 100,
+        y: 100,
+      })
+      renderWorkbench()
+    })
+
+    UINewConditionMerge.on('click', () => {
+      workbench.blocks.push({
+        id: getFreeId(),
+        type: 'condition-merge',
+        text: '',
+        inputs: [],
+        outputs: [],
+        x: 100,
+        y: 100,
+      })
+      renderWorkbench()
+    })
+
+    UINewTimer.on('click', () => {
+      workbench.blocks.push({
+        id: getFreeId(),
+        type: 'timer',
+        text: '',
+        inputs: [],
+        outputs: [],
+        x: 100,
+        y: 100,
+      })
+      renderWorkbench()
+    })
+
     /* UTIL FUNCTIONS */
+
+    const getFreeId = () => {
+      const ids = workbench.blocks.map(b => b.id).sort()
+      for(const id in ids) {
+        if (ids[+id] !== +id+1) {
+          return +id+1
+        }
+      }
+      return ids.length+1
+    }
 
     const executionRun = () => {
       intervalID = setInterval(executionCycle, 1000 / cfg.fps)
@@ -253,9 +349,11 @@ function RobbotXBlock(runtime, element) {
     }
 
     const displayBlockInfo = e => {
-      const {id, type, text} = workbench.blocks.filter(b => b.id === +$(e.target).attr('id').split('-')[1])[0]
+      const {id, type, text, inputs, outputs} = workbench.blocks.filter(b => b.id === +$(e.target).attr('id').split('-')[1])[0]
       UIBlockInfo.html(`id: ${id}<br> type: ${type}<br>`)
       UIBlockCode.val(text)
+      UIBlockInputs.val(inputs.join(', '))
+      UIBlockOutputs.val(outputs.join(', '))
     }
 
     function getCanvasContext(canvas) {
@@ -266,6 +364,7 @@ function RobbotXBlock(runtime, element) {
       //TODO: do it ok
       console.error(JSON.stringify(error, null, 2))
     }
+
     /* SOME BUSINESS LOGIC */
 
     function executionCycle() {
@@ -300,7 +399,8 @@ function RobbotXBlock(runtime, element) {
 
     function renderWorkbench() {
       const { blocks } = workbench
-      UIWorkbench.remove('.block')
+      console.log(blocks)
+      $('.block', UIWorkbench).remove()
       blocks.forEach( block => {
         $(`<div class="block block-${block.type}" id="block-${block.id}"></div>`)
           .data('block', block)
@@ -325,6 +425,7 @@ function RobbotXBlock(runtime, element) {
             displayBlockInfo(e)
             $('.block', UIWorkbench).removeClass('active')
             $(e.target).addClass('active')
+            UIBlockInfoWrapper.show()
             selectedBlock = $(e.target)
           })
       })

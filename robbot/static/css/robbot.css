@@ -286,6 +286,63 @@
     transform: rotate(180deg);
 }
 
+#tab-content .tab-content-item.source .block-info-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+#tab-content .tab-content-item.source .block-info {
+    color: #f1f1f1;
+    padding: 10px;
+}
+
+#tab-content .tab-content-item.source textarea {
+    resize: none;
+    height: 100px;
+    outline: none;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#tab-content .tab-content-item.source input {
+    margin: 5px 0 0;
+    padding: 0 5px;
+    height: 30px;
+    outline: none;
+    border: none;
+    border-radius: 5px;
+}
+
+#tab-content .tab-content-item.source button {
+    margin: 10px;
+    border: none;
+    outline: none;
+    flex: 100%;
+    min-height: 30px;
+    border-radius: 5px;
+    color: #ccc;
+    background: none;
+    box-shadow: 1px 1px 5px 0px #555, -1px -1px 5px 0px #777;
+    cursor: pointer;
+    transition: all .1s linear;
+}
+
+#tab-content .tab-content-item.source button:hover {
+    color: #aaf0d1;
+    text-shadow: 0 0 4px #d0e7dd;
+}
+
+#tab-content .tab-content-item.source #block-remove:hover {
+    color: #dd7385;
+    text-shadow: 0 0 4px #dd7385;
+}
+
+#tab-content .tab-content-item.source p {
+    text-align: center;
+    color: #f1f1f1;
+    margin: 10px;
+}
+
 /* not sure bout arrows mechanics yet */
 #tab-content .tab-content-item.source #workbench canvas {
     z-index: 1;

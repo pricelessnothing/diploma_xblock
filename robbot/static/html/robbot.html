@@ -1,23 +1,35 @@
 <div id="body">
 
     <div id="tab-header">
-        <div class="tab-header-item source " data-toggle="source">Src</div>
-        <div class="tab-header-item run active"  data-toggle="run">Run</div>
+        <div class="tab-header-item source active" data-toggle="source">Src</div>
+        <div class="tab-header-item run "  data-toggle="run">Run</div>
     </div>
     <div id="tab-content">
-        <div class="tab-content-item source">
+        <div class="tab-content-item source active">
             <div id="workbench">
                 <canvas id="canvas"></canvas>
             </div>
             <div class="toolbar">
                 <div class="toolbar-content">
                     <div class="toolbar-toggler">X</div>
-                    <div class="block-info"></div>
-                    <textarea></textarea>
+                        <div class="block-info-wrapper">
+                        <div class="block-info"></div>
+                        <textarea placeholder="Source"></textarea>
+                        <input type="text" id="inputs" placeholder="inputs">
+                        <input type="text" id="outputs" placeholder="outputs">
+                        <button id="block-remove">Remove block</button>
+
+                        <p>Add block</p>
+
+                        <button id="new-instruction">Instruction</button>
+                        <button id="new-condition">Condition</button>
+                        <button id="new-condition-merge">Condition Merge</button>
+                        <button id="new-timer">Timer</button>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="tab-content-item run active">
+        <div class="tab-content-item run ">
             <div id="runtime">
 
                 <canvas id="drawing_canvas" style="z-index: 1"></canvas>
